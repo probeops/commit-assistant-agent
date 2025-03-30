@@ -10,112 +10,58 @@ An AI-powered Git assistant that helps generate conventional commit messages and
 - Follows commitlint conventions
 - Customizable templates for PR generation
 
-## Installation
+## Setup
 
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/commit-assistant-agent.git
-cd commit-assistant-agent
+1. Clone this repository:
+   ```
+   git clone https://github.com/yourusername/commit-assistant-agent.git
+   cd commit-assistant-agent
+   ```
+
+2. Create a virtual environment and install dependencies:
+   ```
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   ```
+
+3. Set up your environment:
+   ```
+   cp config.yaml.example config.yaml
+   cp .env.example .env  # If .env.example exists
+   ```
+
+4. Get your API keys:
+   - For DeepSeek: Sign up at [DeepSeek AI](https://deepseek.com) and generate an API key
+   - Add your API key to the `.env` file: `DEEPSEEK_API_KEY=your_api_key_here`
+
+5. Run the tool using the provided script:
+   ```
+   ./run.sh commit  # Generate commit message
+   ./run.sh pr      # Generate PR description
+   ```
+
+6. Optional command flags:
+   ```
+   ./run.sh commit --scope frontend --emoji  # Generate commit message for frontend with emoji
+   ./run.sh pr --title "Custom PR Title" --body "Additional context"
+   ```
+
+## API Compatibility Mode
+
+If you encounter JSON deserialization issues with the smolagents library, you can use the direct API implementation:
+
+```
+./run.sh direct [options]  # Uses direct API calls instead of smolagents
 ```
 
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+This alternate implementation makes direct API calls to the LLM provider and bypasses compatibility issues with the smolagents library. It supports the same options as the standard implementation:
 
-3. Make the script executable:
-```bash
-chmod +x caa.py
 ```
-
-4. Create a symbolic link (optional):
-```bash
-ln -s "$(pwd)/caa.py" /usr/local/bin/caa
+./run.sh direct --simplified --force  # Simplify diff and force accept any message
 ```
 
 ## Configuration
 
 1. Copy the example configuration:
-```bash
-cp config.yaml.example config.yaml
 ```
-
-2. Edit `config.yaml` to set your preferred provider and model.
-
-3. Set up your environment variables:
-```bash
-# For DeepSeek
-export DEEPSEEK_API_KEY=your_api_key_here
-
-# For OpenAI
-export OPENAI_API_KEY=your_api_key_here
-```
-
-## Usage
-
-### Generate Commit Message
-
-```bash
-# Basic usage
-caa commit
-
-# With scope
-caa commit -s feature-name
-```
-
-### Generate Pull Request
-
-```bash
-# Basic usage
-caa pr
-
-# With custom title
-caa pr -t "feat: implement new feature"
-
-# With additional context
-caa pr -b "This PR implements the following features: ..."
-```
-
-## Configuration Options
-
-### Provider Configuration
-
-```yaml
-provider:
-  name: "deepseek"  # Provider name (deepseek, openai, anthropic)
-  model: "deepseek-chat"  # Model name
-  api_key: ""  # Will be loaded from environment variable
-```
-
-### Commit Message Configuration
-
-```yaml
-commit:
-  types:
-    - feat
-    - fix
-    - docs
-    - style
-    - refactor
-    - test
-    - chore
-  max_header_length: 72
-  max_body_length: 100
-```
-
-### PR Template Configuration
-
-```yaml
-pr:
-  template:
-    title_format: "{type}({scope}): {description}"
-    sections:
-      - "Description"
-      - "Changes"
-      - "Testing"
-      - "Additional Notes"
-```
-
-## License
-
-MIT 
