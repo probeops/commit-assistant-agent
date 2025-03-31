@@ -85,13 +85,70 @@ def call_deepseek_api(prompt, api_key):
         click.echo(f"Error parsing API response: {str(e)}", err=True)
         return None
 
-@click.command()
+def get_branch_diff(source_branch, target_branch):
+    try:
+        repo = Repo(os.getcwd())
+        # Get the diff between two branches
+        return repo.git.diff(f"{target_branch}...{source_branch}")
+    except Exception as e:
+        click.echo(f"Error getting branch diff: {str(e)}", err=True)
+        return ""
+
+def generate_pr_content(diff, config, source_branch, target_branch, scope=None, brief=False):
+    api_key = os.getenv("DEEPSEEK_API_KEY")
+    if not api_key:
+        click.echo(f"Error: DEEPSEEK_API_KEY not found in environment", err=True)
+        return None, None
+
+    # Create prompt for PR title and description
+    prompt = f"""Please generate a Pull Request title and description for merging from {source_branch} to {target_branch}.
+The PR title should follow the format: {config['pr']['template']['title_format']}
+Available semantic types: {', '.join(config['commit']['types'])}
+
+For the description, include the following sections:
+{chr(10).join(['- ' + section for section in config['pr']['template']['sections']])}
+
+{f'Use brief, concise language' if brief else ''}
+Scope: {scope if scope else 'not specified'}
+
+Here is the diff between the branches:
+```
+{diff}
+```
+
+Format your response as follows:
+TITLE:
+<The PR title>
+
+DESCRIPTION:
+<The PR description with all required sections>"""
+
+    click.echo("Generating PR content via direct API call...")
+    response = call_deepseek_api(prompt, api_key)
+    
+    if response:
+        try:
+            # Split response into title and description
+            parts = response.split("\nDESCRIPTION:", 1)
+            title = parts[0].replace("TITLE:", "").strip()
+            description = parts[1].strip() if len(parts) > 1 else ""
+            return title, description
+        except Exception as e:
+            click.echo(f"Error parsing API response: {str(e)}", err=True)
+            return None, None
+    return None, None
+
+@click.group()
+def cli():
+    """Commit Assistant CLI"""
+    pass
+
+@cli.command()
 @click.option('--scope', '-s', help='The scope of the commit')
 @click.option('--brief/--no-brief', default=False, help='Use brief style for commit message')
 @click.option('--emoji/--no-emoji', default=False, help='Include emoji in commit message')
 @click.option('--simplified/--no-simplified', default=False, help='Use simplified diff for API compatibility')
 @click.option('--force/--no-force', default=False, help='Force accept the message even if validation fails')
-
 def commit(scope, brief, emoji, simplified, force):
     """Generate a commit message based on staged changes (direct API call)"""
     try:
@@ -157,5 +214,45 @@ Here is my git diff:
     else:
         click.echo("Failed to generate a commit message", err=True)
 
+@cli.command()
+@click.argument('source_branch')
+@click.argument('target_branch')
+@click.option('--scope', '-s', help='The scope of the PR')
+@click.option('--brief/--no-brief', default=False, help='Use brief style for PR content')
+@click.option('--simplified/--no-simplified', default=False, help='Use simplified diff for API compatibility')
+def pr(source_branch, target_branch, scope, brief, simplified):
+    """Generate a PR title and description for merging between branches"""
+    try:
+        config = load_config()
+    except Exception as e:
+        click.echo(f"Error loading config: {str(e)}", err=True)
+        sys.exit(1)
+    
+    diff = get_branch_diff(source_branch, target_branch)
+    if not diff:
+        click.echo("No changes detected between branches")
+        return
+    
+    # For API compatibility, optionally simplify the diff
+    if simplified and len(diff) > 1000:
+        lines = diff.split('\n')
+        first_10_lines = '\n'.join(lines[:10])
+        last_10_lines = '\n'.join(lines[-10:])
+        diff_summary = f"{first_10_lines}\n\n... [diff truncated for API compatibility] ...\n\n{last_10_lines}"
+        diff = diff_summary
+        click.echo("Using simplified diff for API compatibility")
+    
+    title, description = generate_pr_content(diff, config, source_branch, target_branch, scope, brief)
+    
+    if title and description:
+        click.echo("\nGenerated PR content:")
+        click.echo("-" * 40)
+        click.echo(f"Title: {title}")
+        click.echo("\nDescription:")
+        click.echo(description)
+        click.echo("-" * 40)
+    else:
+        click.echo("Failed to generate PR content", err=True)
+
 if __name__ == "__main__":
-    commit() 
+    cli() 
