@@ -1,67 +1,74 @@
-# Commit Assistant Agent (CAA)
+# Commit Assistant
 
-An AI-powered Git assistant that helps generate conventional commit messages and pull request descriptions using the smolagents library.
+An AI-powered git commit message generator using DeepSeek API.
 
-## Features
-
-- Generate conventional commit messages based on staged changes
-- Generate pull request titles and descriptions
-- Configurable AI provider (supports various models like DeepSeek, OpenAI, etc.)
-- Follows commitlint conventions
-- Customizable templates for PR generation
-
-## Setup
+## Installation
 
 1. Clone this repository:
-   ```
-   git clone https://github.com/yourusername/commit-assistant-agent.git
-   cd commit-assistant-agent
-   ```
+```bash
+git clone https://github.com/yourusername/commit-assistant.git
+cd commit-assistant
+```
 
-2. Create a virtual environment and install dependencies:
-   ```
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   ```
+2. Install the package:
+```bash
+pip install -e .
+```
 
 3. Set up your environment:
-   ```
-   cp config.yaml.example config.yaml
-   cp .env.example .env  # If .env.example exists
-   ```
-
-4. Get your API keys:
-   - For DeepSeek: Sign up at [DeepSeek AI](https://deepseek.com) and generate an API key
-   - Add your API key to the `.env` file: `DEEPSEEK_API_KEY=your_api_key_here`
-
-5. Run the tool using the provided script:
-   ```
-   ./run.sh commit  # Generate commit message
-   ./run.sh pr      # Generate PR description
-   ```
-
-6. Optional command flags:
-   ```
-   ./run.sh commit --scope frontend --emoji  # Generate commit message for frontend with emoji
-   ./run.sh pr --title "Custom PR Title" --body "Additional context"
-   ```
-
-## API Compatibility Mode
-
-If you encounter JSON deserialization issues with the smolagents library, you can use the direct API implementation:
-
-```
-./run.sh direct [options]  # Uses direct API calls instead of smolagents
+Create a `.env` file in your project directory with your DeepSeek API key:
+```bash
+DEEPSEEK_API_KEY=your_api_key_here
 ```
 
-This alternate implementation makes direct API calls to the LLM provider and bypasses compatibility issues with the smolagents library. It supports the same options as the standard implementation:
+## Usage
 
-```
-./run.sh direct --simplified --force  # Simplify diff and force accept any message
+The tool will be available as `commit-assistant` in your terminal. You can use it from any git repository:
+
+```bash
+# Generate a commit message for staged changes
+commit-assistant
+
+# Options:
+commit-assistant --help  # Show all available options
+commit-assistant --scope backend  # Specify commit scope
+commit-assistant --brief  # Generate brief commit message
+commit-assistant --emoji  # Include emoji in commit message
+commit-assistant --simplified  # Use simplified diff for large changes
+commit-assistant --force  # Force accept message even if validation fails
 ```
 
 ## Configuration
 
-1. Copy the example configuration:
+The tool looks for a `config.yaml` file in the current directory. If not found, it uses the default configuration from the package.
+
+You can create your own `config.yaml` to customize the settings:
+
+```yaml
+commit:
+  types:
+    - "feat"
+    - "fix"
+    - "docs"
+    - "style"
+    - "refactor"
+    - "test"
+    - "chore"
+    - "perf"
+  max_header_length: 50
+
+pr:
+  template:
+    title_format: "{type}({scope}): {description}"
+    sections:
+      - "Summary"
+      - "Changes"
+      - "Testing"
+      - "Notes"
 ```
+
+## Requirements
+
+- Python 3.6+
+- Git
+- DeepSeek API key

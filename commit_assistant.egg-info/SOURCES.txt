@@ -1,0 +1,10 @@
+README.md
+setup.py
+commit_assistant/__init__.py
+commit_assistant/direct_commit.py
+commit_assistant.egg-info/PKG-INFO
+commit_assistant.egg-info/SOURCES.txt
+commit_assistant.egg-info/dependency_links.txt
+commit_assistant.egg-info/entry_points.txt
+commit_assistant.egg-info/requires.txt
+commit_assistant.egg-info/top_level.txt

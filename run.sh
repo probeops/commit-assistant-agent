@@ -10,12 +10,4 @@ else
     source ./venv/bin/activate
 fi
 
-# Check for direct API usage
-if [ "$1" == "direct" ]; then
-    # Run direct API implementation
-    shift  # Remove the "direct" argument
-    ./direct_commit.py "$@"
-else
-    # Run the script with smolagents
-    python caa.py "$@"
-fi
+./commit_assistant/direct_commit.py "$@"
