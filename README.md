@@ -1,4 +1,4 @@
-# Commit Assistant
+# Commit Assistant Agent
 
 An AI-powered git commit message generator using DeepSeek API.
 
@@ -23,19 +23,28 @@ DEEPSEEK_API_KEY=your_api_key_here
 
 ## Usage
 
-The tool will be available as `commit-assistant` in your terminal. You can use it from any git repository:
+The tool will be available as `caa` in your terminal. You can use it from any git repository:
 
 ```bash
 # Generate a commit message for staged changes
-commit-assistant
+caa commit [OPTIONS]
 
-# Options:
-commit-assistant --help  # Show all available options
-commit-assistant --scope backend  # Specify commit scope
-commit-assistant --brief  # Generate brief commit message
-commit-assistant --emoji  # Include emoji in commit message
-commit-assistant --simplified  # Use simplified diff for large changes
-commit-assistant --force  # Force accept message even if validation fails
+# Generate a PR title and description
+caa pr SOURCE_BRANCH TARGET_BRANCH [OPTIONS]
+
+# Commit command options:
+caa commit --help  # Show all available options
+caa commit --scope backend  # Specify commit scope
+caa commit --brief  # Generate brief commit message
+caa commit --emoji  # Include emoji in commit message
+caa commit --simplified  # Use simplified diff for large changes
+caa commit --force  # Force accept message even if validation fails
+
+# PR command options:
+caa pr --help  # Show all available options
+caa pr feature-branch main --scope backend  # Generate PR with scope
+caa pr feature-branch main --brief  # Generate brief PR content
+caa pr feature-branch main --simplified  # Use simplified diff for large changes
 ```
 
 ## Configuration
