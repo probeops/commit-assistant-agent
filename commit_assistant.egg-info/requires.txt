@@ -1,0 +1,5 @@
+click
+pyyaml
+python-dotenv
+gitpython
+requests

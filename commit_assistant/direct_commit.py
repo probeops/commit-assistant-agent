@@ -14,17 +14,24 @@ from git import Repo
 load_dotenv()
 
 def load_config():
-    config_path = Path("config.yaml")
-    if not config_path.exists():
-        click.echo("Error: config.yaml not found", err=True)
-        sys.exit(1)
+    # Look for config in current directory first
+    local_config = Path("config.yaml")
+    if local_config.exists():
+        config_path = local_config
+    else:
+        # Fall back to package default config
+        package_dir = Path(__file__).parent
+        config_path = package_dir / "config.yaml"
+        if not config_path.exists():
+            click.echo("Error: config.yaml not found in current directory or package", err=True)
+            sys.exit(1)
     
     with open(config_path) as f:
         return yaml.safe_load(f)
 
 def get_git_diff():
     try:
-        repo = Repo(".")
+        repo = Repo(os.getcwd())
         # Check for staged changes first
         if repo.index.diff("HEAD"):
             return repo.git.diff("--staged")
@@ -64,17 +71,17 @@ def call_deepseek_api(prompt, api_key):
         "max_tokens": 500
     }
     
-    response = requests.post(url, headers=headers, json=data)
-    
-    if response.status_code != 200:
-        click.echo(f"API error: {response.status_code} - {response.text}", err=True)
-        return None
-    
     try:
+        response = requests.post(url, headers=headers, json=data)
+        response.raise_for_status()
+        
         result = response.json()
         message = result["choices"][0]["message"]["content"]
         return message.strip()
-    except Exception as e:
+    except requests.exceptions.RequestException as e:
+        click.echo(f"API request error: {str(e)}", err=True)
+        return None
+    except (KeyError, IndexError, json.JSONDecodeError) as e:
         click.echo(f"Error parsing API response: {str(e)}", err=True)
         return None
 
@@ -84,9 +91,14 @@ def call_deepseek_api(prompt, api_key):
 @click.option('--emoji/--no-emoji', default=False, help='Include emoji in commit message')
 @click.option('--simplified/--no-simplified', default=False, help='Use simplified diff for API compatibility')
 @click.option('--force/--no-force', default=False, help='Force accept the message even if validation fails')
+
 def commit(scope, brief, emoji, simplified, force):
     """Generate a commit message based on staged changes (direct API call)"""
-    config = load_config()
+    try:
+        config = load_config()
+    except Exception as e:
+        click.echo(f"Error loading config: {str(e)}", err=True)
+        sys.exit(1)
     
     diff = get_git_diff()
     if not diff:
@@ -103,10 +115,9 @@ def commit(scope, brief, emoji, simplified, force):
         click.echo("Using simplified diff for API compatibility")
     
     # Get API key
-    provider_config = config["provider"]
-    api_key = os.getenv(f"{provider_config['name'].upper()}_API_KEY")
+    api_key = os.getenv("DEEPSEEK_API_KEY")
     if not api_key:
-        click.echo(f"Error: {provider_config['name'].upper()}_API_KEY not found in environment", err=True)
+        click.echo(f"Error: DEEPSEEK_API_KEY not found in environment", err=True)
         sys.exit(1)
     
     prompt = f"""Please write a commit message for my changes.
@@ -147,4 +158,4 @@ Here is my git diff:
         click.echo("Failed to generate a commit message", err=True)
 
 if __name__ == "__main__":
-    commit()
+    commit() 
