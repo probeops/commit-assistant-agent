@@ -32,15 +32,13 @@ def get_agent(config):
     try:
         # Use the correct model initialization based on provider
         if provider_config["name"].lower() == "deepseek":
-            # Standard DeepSeek models that should work
-            valid_models = ["deepseek-chat", "deepseek-coder"]
             
             # Try to use the model specified in config
-            model_id = provider_config.get("model", "deepseek-coder")
+            model_id = provider_config.get("model", "deepseek-reasoner")
             
             # For DeepSeek specific errors
             if not model_id or model_id.strip() == "":
-                model_id = "deepseek-coder"
+                model_id = "deepseek-reasoner"
                 click.echo(f"Warning: No model specified, using default model '{model_id}'", err=True)
             
             # Add DeepSeek-specific parameters to avoid JSON deserialization issues
