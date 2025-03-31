@@ -14,7 +14,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "commit-assistant=commit_assistant.direct_commit:cli",
+            "caa=commit_assistant.direct_commit:cli",
         ],
     },
 ) 
