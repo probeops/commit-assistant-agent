@@ -1,3 +1,16 @@
-.env
 config.yaml
+
+# Python cache files
+__pycache__/
+*.py[cod]
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environment
 venv/
+env/
+.env
